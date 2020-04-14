@@ -19,18 +19,23 @@
 		t.fail_count
 	</sql>
 	
-	<insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobLogReport" useGeneratedKeys="true" keyProperty="id" >
+	<insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobLogReport">
+		<selectKey resultType="java.lang.Integer" order="BEFORE" keyProperty="id">
+			select XXL_JOB_REPORT_SEQ.nextval from dual
+		</selectKey>
 		INSERT INTO xxl_job_log_report (
-			`trigger_day`,
-			`running_count`,
-			`suc_count`,
-			`fail_count`
+			id,
+			trigger_day,
+			running_count,
+			suc_count,
+			fail_count
 		) VALUES (
-			#{triggerDay},
-			#{runningCount},
-			#{sucCount},
-			#{failCount}
-		);
+			#{id},
+			#{triggerDay, jdbcType=TIMESTAMP},
+			#{runningCount, jdbcType=NUMERIC},
+			#{sucCount, jdbcType=NUMERIC},
+			#{failCount, jdbcType=NUMERIC}
+		)
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID() 
 		</selectKey>-->
@@ -38,15 +43,15 @@
 
 	<update id="update" >
         UPDATE xxl_job_log_report
-        SET `running_count` = #{runningCount},
-        	`suc_count` = #{sucCount},
-        	`fail_count` = #{failCount}
-        WHERE `trigger_day` = #{triggerDay}
+        SET running_count = #{runningCount, jdbcType=NUMERIC},
+        	suc_count = #{sucCount, jdbcType=NUMERIC},
+        	fail_count = #{failCount, jdbcType=NUMERIC}
+        WHERE trigger_day = #{triggerDay, jdbcType=TIMESTAMP}
     </update>
 
 	<select id="queryLogReport" resultMap="XxlJobLogReport">
 		SELECT <include refid="Base_Column_List" />
-		FROM xxl_job_log_report AS t
+		FROM xxl_job_log_report t
 		WHERE t.trigger_day between #{triggerDayFrom} and #{triggerDayTo}
 		ORDER BY t.trigger_day ASC
 	</select>
@@ -56,7 +61,7 @@
 			SUM(running_count) running_count,
 			SUM(suc_count) suc_count,
 			SUM(fail_count) fail_count
-		FROM xxl_job_log_report AS t
+		FROM xxl_job_log_report t
 	</select>
 
 </mapper>

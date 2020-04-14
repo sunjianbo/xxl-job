@@ -20,23 +20,27 @@
 	</sql>
 
 	<select id="pageList" parameterType="java.util.HashMap" resultMap="XxlJobUser">
-		SELECT <include refid="Base_Column_List" />
-		FROM xxl_job_user AS t
-		<trim prefix="WHERE" prefixOverrides="AND | OR" >
-			<if test="username != null and username != ''">
-				AND t.username like CONCAT(CONCAT('%', #{username}), '%')
-			</if>
-			<if test="role gt -1">
-				AND t.role = #{role}
-			</if>
-		</trim>
-		ORDER BY username ASC
-		LIMIT #{offset}, #{pagesize}
+		SELECT *  from (
+			SELECT t1.*,rownum rn FROM (
+				SELECT <include refid="Base_Column_List" />
+				FROM xxl_job_user t
+				<trim prefix="WHERE" prefixOverrides="AND | OR" >
+					<if test="username != null and username != ''">
+						AND t.username like CONCAT(CONCAT('%', #{username}), '%')
+					</if>
+					<if test="role gt -1">
+						AND t.role = #{role}
+					</if>
+				</trim>
+				ORDER BY username ASC
+			) t1
+		)
+		WHERE rn <![CDATA[ > ]]> ${offset} and rn <![CDATA[ <= ]]> ${offset}+#{pagesize}
 	</select>
 
 	<select id="pageListCount" parameterType="java.util.HashMap" resultType="int">
 		SELECT count(1)
-		FROM xxl_job_user AS t
+		FROM xxl_job_user t
 		<trim prefix="WHERE" prefixOverrides="AND | OR" >
 			<if test="username != null and username != ''">
 				AND t.username like CONCAT(CONCAT('%', #{username}), '%')
@@ -49,32 +53,37 @@
 
 	<select id="loadByUserName" parameterType="java.util.HashMap" resultMap="XxlJobUser">
 		SELECT <include refid="Base_Column_List" />
-		FROM xxl_job_user AS t
+		FROM xxl_job_user t
 		WHERE t.username = #{username}
 	</select>
 
-	<insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobUser" useGeneratedKeys="true" keyProperty="id" >
+	<insert id="save" parameterType="com.xxl.job.admin.core.model.XxlJobUser">
+		<selectKey resultType="int" order="BEFORE" keyProperty="id">
+			select XXL_JOB_USER_SEQ.nextval from dual
+		</selectKey>
 		INSERT INTO xxl_job_user (
+			id,
 			username,
 			password,
 			role,
 			permission
 		) VALUES (
-			#{username},
-			#{password},
-			#{role},
-			#{permission}
-		);
+			#{id},
+			#{username, jdbcType=VARCHAR},
+			#{password, jdbcType=VARCHAR},
+			#{role, jdbcType=NUMERIC},
+			#{permission, jdbcType=VARCHAR}
+		)
 	</insert>
 
 	<update id="update" parameterType="com.xxl.job.admin.core.model.XxlJobUser" >
 		UPDATE xxl_job_user
 		SET
 			<if test="password != null and password != ''">
-				password = #{password},
+				password = #{password, jdbcType=VARCHAR},
 			</if>
-			role = #{role},
-			permission = #{permission}
+			role = #{role, jdbcType=NUMERIC},
+			permission = #{permission, jdbcType=VARCHAR}
 		WHERE id = #{id}
 	</update>
 
