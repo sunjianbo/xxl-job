@@ -37,6 +37,7 @@ public class SampleXxlJob {
     @XxlJob("demoJobHandler")
     public ReturnT<String> demoJobHandler(String param) throws Exception {
         XxlJobLogger.log("XXL-JOB, Hello World.");
+        logger.info("demoJobHandler被调用,顺利执行了");
 
         for (int i = 0; i < 5; i++) {
             XxlJobLogger.log("beat at:" + i);
